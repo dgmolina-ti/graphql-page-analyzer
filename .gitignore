@@ -11,3 +11,4 @@ results*
 node_modules/
 
 # Ignoring macOS file.DS_Store
+.DS_Store
