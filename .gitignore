@@ -1,0 +1,5 @@
+# Ignoring digest files
+digest.*
+
+# Ignoring temporary files
+results*
