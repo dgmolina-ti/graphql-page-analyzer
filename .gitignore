@@ -8,4 +8,6 @@ results*
 .env
 
 # Ignoring node modules
-node_modules
+node_modules/
+
+# Ignoring macOS file.DS_Store
