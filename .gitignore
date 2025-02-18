@@ -3,3 +3,9 @@ digest.*
 
 # Ignoring temporary files
 results*
+
+# Ignoring environment files
+.env
+
+# Ignoring node modules
+node_modules

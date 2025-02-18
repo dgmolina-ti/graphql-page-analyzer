@@ -1,6 +1,6 @@
 # GraphQL Page Analyzer
 
-A specialized tool that uses Google Gemini 2.0 Flash to analyze your codebase for pages and their associated GraphQL operations.
+A specialized tool that uses LLMs to analyze your codebase for pages and their associated GraphQL operations.
 
 ## Features
 
