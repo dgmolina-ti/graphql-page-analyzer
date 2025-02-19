@@ -37,4 +37,17 @@ if (args.length === 0) {
 
 const filePath = args[0];
 const model = args[1]; // Optional model parameter
-runAnalysis(filePath, model);
+// runAnalysis(filePath, model);
+
+async function main() {
+    const analyzer = new OpenRouterAnalyzer(process.env.OPENROUTER_API_KEY);
+
+    const repoPath = `./repo_to_analyze/${filePath}`
+
+    // To scan and group by pages folder:
+    const groupedFiles = await analyzer.scanForGraphQLTags(repoPath, `${repoPath}/src/components/pages`);
+
+    console.log({ groupedFiles })
+}
+
+main().catch(console.error);

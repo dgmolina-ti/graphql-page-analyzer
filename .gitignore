@@ -12,3 +12,6 @@ node_modules/
 
 # Ignoring macOS file.DS_Store
 .DS_Store
+
+# Ignoring source directory files
+.repo_to_analyze/

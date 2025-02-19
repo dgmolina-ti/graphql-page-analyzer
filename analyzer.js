@@ -1,8 +1,10 @@
 import dotenv from 'dotenv';
+import fs from 'fs';
+import path from 'path';
 dotenv.config();
 
 class OpenRouterAnalyzer {
-    constructor(apiKey, model = 'anthropic/claude-3-opus') {
+    constructor(apiKey, model = 'gemini/gemini-2.0-flash-exp') {
         this.apiKey = apiKey;
         this.model = model;
     }
@@ -226,6 +228,79 @@ class OpenRouterAnalyzer {
                 page: page.path,
                 error: error.message
             };
+        }
+    }
+
+    async findGraphQLFiles(dirPath) {
+        const files = [];
+
+        const processDirectory = async (currentPath) => {
+            const entries = await fs.promises.readdir(currentPath, { withFileTypes: true });
+
+            for (const entry of entries) {
+                const fullPath = path.join(currentPath, entry.name);
+
+                if (entry.isDirectory()) {
+                    await processDirectory(fullPath);
+                } else if (entry.isFile() && /\.(js|jsx|ts|tsx)$/.test(entry.name)) {
+                    const content = await fs.promises.readFile(fullPath, 'utf-8');
+                    if (content.includes('gql`') || content.includes('graphql`')) {
+                        files.push(fullPath);
+                    }
+                }
+            }
+        };
+
+        await processDirectory(dirPath);
+        return files;
+    }
+
+    async groupFilesByPagesFolder(files, pagesPath) {
+        const groupedFiles = new Map();
+
+        for (const file of files) {
+            const relativePath = path.relative(pagesPath, file);
+            const topLevelFolder = relativePath.split(path.sep)[0];
+
+            if (!groupedFiles.has(topLevelFolder)) {
+                groupedFiles.set(topLevelFolder, []);
+            }
+
+            groupedFiles.get(topLevelFolder).push(file);
+        }
+
+        return Object.fromEntries(groupedFiles);
+    }
+
+    async scanForGraphQLTags(folderPath, pagesComponentsPath = null) {
+        try {
+            console.log('\n🔍 Scanning for files with GraphQL tags...');
+            const files = await this.findGraphQLFiles(folderPath);
+
+            console.log(`\n📁 Found ${files.length} files containing GraphQL tags:`);
+            files.forEach(file => {
+                console.log(`   • ${file}`);
+            });
+
+            if (pagesComponentsPath) {
+                console.log('\n📑 Grouping files by pages folder...');
+                const groupedFiles = await this.groupFilesByPagesFolder(files, pagesComponentsPath);
+
+                console.log('\n📊 Files grouped by pages folder:');
+                Object.entries(groupedFiles).forEach(([folder, files]) => {
+                    console.log(`\n📁 ${folder}:`);
+                    files.forEach(file => {
+                        console.log(`   • ${path.relative(pagesComponentsPath, file)}`);
+                    });
+                });
+
+                return groupedFiles;
+            }
+
+            return files;
+        } catch (error) {
+            console.error('Error scanning for GraphQL tags:', error);
+            throw error;
         }
     }
 }
