@@ -15,3 +15,6 @@ node_modules/
 
 # Ignoring source directory files
 .repo_to_analyze/
+
+# Ignoring analysis output files
+analysis*

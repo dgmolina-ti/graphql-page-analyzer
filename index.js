@@ -1,29 +1,29 @@
 import fs from 'fs/promises';
-import path from 'path';
 import { OpenRouterAnalyzer } from './analyzer.js';
 
-async function runAnalysis(filePath, model) {
-    try {
-        // Read the file content
-        const fileContent = await fs.readFile(filePath, 'utf-8');
-        console.log(`\n📂 Loaded file: ${path.basename(filePath)}`);
-        console.log(`🤖 Using model: ${model || 'anthropic/claude-3-opus (default)'}`);
+async function main(filePath, model) {
+    // Initialize the analyzer with the OpenRouter API key and model
+    const analyzer = new OpenRouterAnalyzer(process.env.OPENROUTER_API_KEY, model);
 
-        const analyzer = new OpenRouterAnalyzer(process.env.OPENROUTER_API_KEY, model);
-        const analysis = await analyzer.analyzePages(fileContent);
+    const repoPath = `./repo_to_analyze/${filePath}`
 
-        // Save the analysis results
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-        const outputFile = `analysis-${timestamp}.json`;
-        await fs.writeFile(
-            outputFile,
-            JSON.stringify(analysis, null, 2)
-        );
-        console.log(`\n✅ Analysis complete! Results saved to ${outputFile}`);
-    } catch (error) {
-        console.error('❌ Error:', error.message);
-        process.exit(1);
-    }
+    // Scan and group by pages folder
+    const groupedFiles = await analyzer.scanForGraphQLTags(repoPath, `${repoPath}/src/components/pages`);
+
+    console.log({ groupedFiles });
+
+    // Analyze each page group
+    const analysisResults = await analyzer.analyzeGroupedFiles(groupedFiles);
+
+    // Save the analysis results
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const outputFile = `analysis-${timestamp}.json`;
+    await fs.writeFile(
+        outputFile,
+        JSON.stringify(analysisResults, null, 2)
+    );
+
+    console.log(`\n✅ Analysis complete! Results saved to ${outputFile}`);
 }
 
 // Check command line arguments
@@ -37,17 +37,5 @@ if (args.length === 0) {
 
 const filePath = args[0];
 const model = args[1]; // Optional model parameter
-// runAnalysis(filePath, model);
 
-async function main() {
-    const analyzer = new OpenRouterAnalyzer(process.env.OPENROUTER_API_KEY);
-
-    const repoPath = `./repo_to_analyze/${filePath}`
-
-    // To scan and group by pages folder:
-    const groupedFiles = await analyzer.scanForGraphQLTags(repoPath, `${repoPath}/src/components/pages`);
-
-    console.log({ groupedFiles })
-}
-
-main().catch(console.error);
+main(filePath, model).catch(console.error);
